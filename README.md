@@ -14,8 +14,6 @@ The solutions are organized by **Category** (e.g., Array, Sliding Window, Dynami
 
 ## 📝 Problems Solved
 
-
-
 ### 📂 Array
   * 📄 [alien-dictionary](./Array/alien-dictionary.py) | [🔗 LeetCode](https://leetcode.com/problems/alien-dictionary/)
   * 📄 [buildings-with-an-ocean-view](./Array/buildings-with-an-ocean-view.py) | [🔗 LeetCode](https://leetcode.com/problems/buildings-with-an-ocean-view/)
@@ -33,6 +31,9 @@ The solutions are organized by **Category** (e.g., Array, Sliding Window, Dynami
 ### 📂 Dynamic Programming
   * 📄 [cheapest-flights-within-k-stops](./Dynamic_Programming/cheapest-flights-within-k-stops.py) | [🔗 LeetCode](https://leetcode.com/problems/cheapest-flights-within-k-stops/)
 
+### 📂 Hash Table
+  * 📄 [linked-list-cycle](./Hash_Table/linked-list-cycle.py) | [🔗 LeetCode](https://leetcode.com/problems/linked-list-cycle/)
+
 ### 📂 String
   * 📄 [design-add-and-search-words-data-structure](./String/design-add-and-search-words-data-structure.py) | [🔗 LeetCode](https://leetcode.com/problems/design-add-and-search-words-data-structure/)
   * 📄 [simplify-path](./String/simplify-path.py) | [🔗 LeetCode](https://leetcode.com/problems/simplify-path/)
@@ -44,4 +45,6 @@ The solutions are organized by **Category** (e.g., Array, Sliding Window, Dynami
 ### 📂 Two Pointers
   * 📄 [valid-word-abbreviation](./Two_Pointers/valid-word-abbreviation.cpp) | [🔗 LeetCode](https://leetcode.com/problems/valid-word-abbreviation/)
 
+
+---
 *Generated automatically to track algorithmic problem-solving progress.*

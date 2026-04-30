@@ -19,16 +19,12 @@ headers = {
     "Referer": "https://leetcode.com"
 }
 
-# --- THE API SHIELD ---
 def safe_request(query):
-    """Makes a request and safely handles HTML/403 Auth errors from LeetCode."""
+    """Safely handles network and auth errors."""
     res = requests.post(url, json=query, headers=headers)
     if res.status_code != 200:
-        raise Exception(f"LeetCode blocked the request (HTTP {res.status_code}). Your LEETCODE_SESSION cookie is likely expired!")
-    try:
-        return res.json()
-    except Exception:
-        raise Exception("LeetCode returned invalid data. Check your cookies.")
+        raise Exception(f"HTTP {res.status_code} Error. Check if your LeetCode Cookies are expired.")
+    return res.json()
 
 def get_problem_info(p_slug):
     query = {"query": "query q($s: String!) { question(titleSlug: $s) { topicTags { name } } }", "variables": {"s": p_slug}}
@@ -62,9 +58,6 @@ def save_solution(p_slug, sub_id, lang):
 
 # --- 1. EXECUTION ---
 try:
-    if not session_cookie or not csrf_token:
-        raise Exception("Missing LEETCODE_SESSION or LEETCODE_CSRF_TOKEN in GitHub Secrets!")
-
     if "selective" in sync_mode and slug:
         print(f"🔍 Selective Sync for: {slug}")
         query = {"query": "query subList($s: String!) { submissionList(offset: 0, limit: 10, questionSlug: $s) { submissions { id, statusDisplay, lang } } }", "variables": {"s": slug}}
@@ -91,10 +84,11 @@ try:
                     save_solution(s.get('titleSlug'), s.get('id'), s.get('lang'))
             offset += 20
 
-    # --- 2. THE BULLETPROOF TREE GENERATOR ---
+    # --- 2. THE SPLIT-FREE TREE GENERATOR ---
     root_readme_path = "README.md"
     if os.path.exists(root_readme_path):
         print("📝 Rebuilding Tree Structure...")
+        
         allowed_exts = {'.py', '.cpp', '.java', '.js', '.txt'}
         categories = []
         for d in os.listdir('.'):
@@ -114,8 +108,13 @@ try:
         with open(root_readme_path, "r") as f:
             full_content = f.read()
 
-        if "" in full_content:
-            header_text = full_content.split("")[0].strip()
+        # SAFE SLICING (No .split() used anywhere!)
+        marker = ""
+        marker_pos = full_content.find(marker)
+        
+        if marker_pos != -1:
+            # Slice everything from the beginning up to the marker
+            header_text = full_content[:marker_pos].strip()
         else:
             header_text = full_content.strip()
 
@@ -133,4 +132,5 @@ try:
 
 except Exception as e:
     print(f"\n🔥 FATAL SCRIPT CRASH: {e}")
+    traceback.print_exc()
     sys.exit(1)

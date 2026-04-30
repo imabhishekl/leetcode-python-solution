@@ -19,20 +19,30 @@ headers = {
     "Referer": "https://leetcode.com"
 }
 
+# --- THE API SHIELD ---
+def safe_request(query):
+    """Makes a request and safely handles HTML/403 Auth errors from LeetCode."""
+    res = requests.post(url, json=query, headers=headers)
+    if res.status_code != 200:
+        raise Exception(f"LeetCode blocked the request (HTTP {res.status_code}). Your LEETCODE_SESSION cookie is likely expired!")
+    try:
+        return res.json()
+    except Exception:
+        raise Exception("LeetCode returned invalid data. Check your cookies.")
+
 def get_problem_info(p_slug):
     query = {"query": "query q($s: String!) { question(titleSlug: $s) { topicTags { name } } }", "variables": {"s": p_slug}}
     try:
-        res = requests.post(url, json=query, headers=headers).json()
-        return [t['name'] for t in res.get('data', {}).get('question', {}).get('topicTags', [])]
+        data = safe_request(query)
+        return [t['name'] for t in data.get('data', {}).get('question', {}).get('topicTags', [])]
     except:
         return ["Uncategorized"]
 
 def save_solution(p_slug, sub_id, lang):
     query = {"query": "query s($id: Int!) { submissionDetails(submissionId: $id) { code } }", "variables": {"id": int(sub_id)}}
     try:
-        res = requests.post(url, json=query, headers=headers).json()
-        source_code = res.get('data', {}).get('submissionDetails', {}).get('code', '')
-        
+        data = safe_request(query)
+        source_code = data.get('data', {}).get('submissionDetails', {}).get('code', '')
         if not source_code: return False
 
         tags = get_problem_info(p_slug)
@@ -52,11 +62,14 @@ def save_solution(p_slug, sub_id, lang):
 
 # --- 1. EXECUTION ---
 try:
+    if not session_cookie or not csrf_token:
+        raise Exception("Missing LEETCODE_SESSION or LEETCODE_CSRF_TOKEN in GitHub Secrets!")
+
     if "selective" in sync_mode and slug:
         print(f"🔍 Selective Sync for: {slug}")
         query = {"query": "query subList($s: String!) { submissionList(offset: 0, limit: 10, questionSlug: $s) { submissions { id, statusDisplay, lang } } }", "variables": {"s": slug}}
-        res = requests.post(url, json=query, headers=headers).json()
-        subs = res.get('data', {}).get('submissionList', {}).get('submissions', [])
+        data = safe_request(query)
+        subs = data.get('data', {}).get('submissionList', {}).get('submissions', [])
         accepted = [s for s in subs if s.get('statusDisplay') == 'Accepted']
         if accepted:
             save_solution(slug, accepted[0]['id'], accepted[0]['lang'])
@@ -67,8 +80,8 @@ try:
         offset, has_more = 0, True
         while has_more:
             query = {"query": "query subList($o: Int!, $l: Int!) { submissionList(offset: $o, limit: 20) { submissions { id, timestamp, statusDisplay, lang, titleSlug } } }", "variables": {"o": offset, "l": 20}}
-            res = requests.post(url, json=query, headers=headers).json()
-            subs = res.get('data', {}).get('submissionList', {}).get('submissions', [])
+            data = safe_request(query)
+            subs = data.get('data', {}).get('submissionList', {}).get('submissions', [])
             if not subs: break
             for s in subs:
                 if int(s.get('timestamp', 0)) < start_ts:
@@ -82,13 +95,10 @@ try:
     root_readme_path = "README.md"
     if os.path.exists(root_readme_path):
         print("📝 Rebuilding Tree Structure...")
-        
-        # A. Scan folders and build the pure tree
         allowed_exts = {'.py', '.cpp', '.java', '.js', '.txt'}
         categories = []
         for d in os.listdir('.'):
             if os.path.isdir(d) and d not in {'.git', '.github', 'scripts'}:
-                # Only include folder if it has a real code file inside
                 if any(any(f.endswith(ext) for ext in allowed_exts) for f in os.listdir(d)):
                     categories.append(d)
         
@@ -101,18 +111,14 @@ try:
                 tree_md += f"- [{sol}](./{cat}/{sol})\n"
             tree_md += "\n"
 
-        # B. Read the current README
         with open(root_readme_path, "r") as f:
             full_content = f.read()
 
-        # C. Split at the START tag. Keep only the beautiful header text!
         if "" in full_content:
             header_text = full_content.split("")[0].strip()
         else:
-            # Fallback just in case markers are missing
             header_text = full_content.strip()
 
-        # D. Stitch it all together: Header + Tree + Footer
         final_readme = (
             header_text + "\n\n" +
             "\n" +
@@ -127,5 +133,4 @@ try:
 
 except Exception as e:
     print(f"\n🔥 FATAL SCRIPT CRASH: {e}")
-    traceback.print_exc()
     sys.exit(1)

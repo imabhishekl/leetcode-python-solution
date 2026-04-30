@@ -24,7 +24,7 @@ headers = {
 def safe_request(query):
     res = requests.post(url, json=query, headers=headers)
     if res.status_code != 200:
-        raise Exception(f"HTTP {res.status_code} Error. Check if your LeetCode Cookies are expired.")
+        raise Exception(f"HTTP {res.status_code} Error. LeetCode rejected the request. Check your query or cookies.")
     return res.json()
 
 def get_problem_info(p_slug):
@@ -86,7 +86,11 @@ def save_solution(p_slug, sub_id, lang):
 try:
     if "selective" in sync_mode and slug:
         print(f"🔍 Selective Sync for: {slug}")
-        query = {"query": "query subList($s: String!) { submissionList(offset: 0, limit: 10, questionSlug: $s) { submissions { id, statusDisplay, lang } } }", "variables": {"s": slug}}
+        # FIXED: Strictly typed GraphQL query variables
+        query = {
+            "query": "query subList($offset: Int!, $limit: Int!, $questionSlug: String!) { submissionList(offset: $offset, limit: $limit, questionSlug: $questionSlug) { submissions { id, statusDisplay, lang } } }",
+            "variables": {"offset": 0, "limit": 10, "questionSlug": slug}
+        }
         data = safe_request(query)
         subs = data.get('data', {}).get('submissionList', {}).get('submissions', [])
         accepted = [s for s in subs if s.get('statusDisplay') == 'Accepted']
@@ -98,7 +102,11 @@ try:
         start_ts = datetime.strptime(start_date_str, "%Y-%m-%d").timestamp()
         offset, has_more = 0, True
         while has_more:
-            query = {"query": "query subList($o: Int!, $l: Int!) { submissionList(offset: $o, limit: 20) { submissions { id, timestamp, statusDisplay, lang, titleSlug } } }", "variables": {"o": offset, "l": 20}}
+            # FIXED: Strictly typed GraphQL query variables for Timeline
+            query = {
+                "query": "query subList($offset: Int!, $limit: Int!, $questionSlug: String!) { submissionList(offset: $offset, limit: $limit, questionSlug: $questionSlug) { submissions { id, timestamp, statusDisplay, lang, titleSlug } } }",
+                "variables": {"offset": offset, "limit": 20, "questionSlug": ""}
+            }
             data = safe_request(query)
             subs = data.get('data', {}).get('submissionList', {}).get('submissions', [])
             if not subs: break
@@ -131,7 +139,6 @@ try:
         
         for sol in solutions:
             display_name = os.path.splitext(sol)[0]
-            # Add the external LeetCode link directly into the tree!
             leetcode_url = f"https://leetcode.com/problems/{display_name}/"
             tree_md += f"  * 📄 [{display_name}](./{cat}/{sol}) | [🔗 LeetCode]({leetcode_url})\n"
         tree_md += "\n"

@@ -23,7 +23,7 @@ def get_problem_info(p_slug):
     query = {"query": "query q($s: String!) { question(titleSlug: $s) { topicTags { name } } }", "variables": {"s": p_slug}}
     try:
         res = requests.post(url, json=query, headers=headers).json()
-        return [t['name'] for t in res['data']['question']['topicTags']]
+        return [t['name'] for t in res.get('data', {}).get('question', {}).get('topicTags', [])]
     except:
         return ["Uncategorized"]
 
@@ -34,9 +34,11 @@ def save_solution(p_slug, sub_id, lang):
         source_code = res['data']['submissionDetails']['code']
         tags = get_problem_info(p_slug)
         category = tags[0].replace(" ", "_") if tags else "Uncategorized"
+        
         os.makedirs(category, exist_ok=True)
         ext = { "python3": ".py", "python": ".py", "cpp": ".cpp", "java": ".java", "javascript": ".js" }.get(lang, ".txt")
         file_path = os.path.join(category, f"{p_slug}{ext}")
+        
         with open(file_path, "w") as f:
             f.write(source_code)
         print(f"✅ Saved: {category}/{p_slug}")
@@ -45,13 +47,9 @@ def save_solution(p_slug, sub_id, lang):
         print(f"❌ Error saving {p_slug}: {e}")
         return False
 
-# --- EXECUTION ---
+# --- 1. EXECUTION ---
 success_count = 0
-
-if "selective" in sync_mode:
-    if not slug:
-        print("❌ Selective mode requires a problem slug.")
-        sys.exit(1)
+if "selective" in sync_mode and slug:
     query = {"query": "query subList($s: String!) { submissionList(offset: 0, limit: 10, questionSlug: $s) { submissions { id, statusDisplay, lang } } }", "variables": {"s": slug}}
     res = requests.post(url, json=query, headers=headers).json()
     subs = res.get('data', {}).get('submissionList', {}).get('submissions', [])
@@ -76,36 +74,44 @@ elif "timeline" in sync_mode:
                     success_count += 1
         offset += 20
 
-# --- THE "STITCH" INDEXER (ONLY APPENDS/REFRESHES THE MIDDLE) ---
+# --- 2. THE "CLEAN" INDEXER ---
 root_readme_path = "README.md"
 if os.path.exists(root_readme_path):
-    # 1. Build the new index content
-    categories = sorted([d for d in os.listdir('.') if os.path.isdir(d) and d not in {'.git', '.github', 'scripts'} and not d.startswith('.')])
+    # Only treat a folder as a "Category" if it contains actual code files
+    allowed_exts = {'.py', '.cpp', '.java', '.js', '.txt'}
+    categories = []
+    for d in os.listdir('.'):
+        if os.path.isdir(d) and d not in {'.git', '.github', 'scripts'}:
+            # Check if this folder has any valid code files
+            if any(any(f.endswith(ext) for ext in allowed_exts) for f in os.listdir(d)):
+                categories.append(d)
+    
+    categories.sort()
+    
     new_index = "\n"
     for cat in categories:
         new_index += f"### {cat.replace('_', ' ')}\n"
-        solutions = sorted([f for f in os.listdir(cat) if os.path.isfile(os.path.join(cat, f))])
+        solutions = sorted([f for f in os.listdir(cat) if any(f.endswith(ext) for ext in allowed_exts)])
         for sol in solutions:
             new_index += f"- [{sol}](./{cat}/{sol})\n"
         new_index += "\n"
 
-    # 2. Read existing content
+    # Read and split safely
     with open(root_readme_path, "r") as f:
         full_content = f.read()
 
-    # 3. Use markers to keep the header and footer intact
-    # We use non-greedy matching to find exactly what's between the markers
-    marker_pattern = r"()(.*?)()"
+    # Split using the first marker. We only keep what is BEFORE the first tag.
+    header_part = full_content.split("")[0]
     
-    if "" in full_content and "" in full_content:
-        # re.sub with \1 and \3 keeps the tags themselves, new_index replaces \2
-        updated_content = re.sub(marker_pattern, rf"\1{new_index}\3", full_content, flags=re.DOTALL)
-        
-        with open(root_readme_path, "w") as f:
-            f.write(updated_content)
-        print("🚀 README index updated. Header preserved.")
-    else:
-        # Fallback if markers are missing: Append to the end so nothing is deleted
-        with open(root_readme_path, "a") as f:
-            f.write(f"\n\n## 📝 Problems Solved\n{new_index}\n")
-        print("⚠️ Markers not found. Appended index to the end of file to prevent data loss.")
+    # Reconstruct the file: Header + Markers + New Index + Footer Marker + Final Text
+    # This prevents the "infinite append" bug
+    final_output = header_part + "" + new_index + ""
+    
+    # If there was a specific footer after the markers, we can try to grab it
+    if "" in full_content:
+        footer_part = full_content.split("")[-1]
+        final_output += footer_part
+
+    with open(root_readme_path, "w") as f:
+        f.write(final_output)
+    print("🚀 README synchronized and cleaned.")

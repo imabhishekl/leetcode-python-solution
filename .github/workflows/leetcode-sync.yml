@@ -4,62 +4,50 @@ on:
   workflow_dispatch:
     inputs:
       sync_mode:
-        description: 'Which sync would you like to run?'
+        description: 'Select Sync Mode'
         required: true
         type: choice
         options:
           - 'Selective (Single Problem)'
-          - 'Bulk (All Accepted)'
+          - 'Timeline (All since specific date)'
       problem_slug:
-        description: 'Problem Slug (Only required if you chose Selective)'
+        description: 'Problem Slug (e.g., two-sum) - Only for Selective Mode'
         required: false
         type: string
+      start_date:
+        description: 'Start Date (YYYY-MM-DD) - Only for Timeline Mode'
+        required: false
+        default: '2026-04-01'
 
 jobs:
-  execute_sync:
+  build_and_sync:
     runs-on: ubuntu-latest
     steps:
-      # --- UPDATED TO v4 HERE ---
       - name: Checkout Repository
-        uses: actions/checkout@v4 
+        uses: actions/checkout@v4
 
-      # --- UPDATED TO v5 HERE ---
       - name: Set up Python
-        uses: actions/setup-python@v5 
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
       - name: Install Dependencies
         run: pip install requests
 
-      # ==========================================
-      # ROUTE 1: THE SELECTIVE SYNC (Your Primary)
-      # ==========================================
-      - name: Fetch Specific Solution
-        if: ${{ github.event.inputs.sync_mode == 'Selective (Single Problem)' }}
+      - name: Execute Fetch Script
         env:
           LEETCODE_SESSION: ${{ secrets.LEETCODE_SESSION }}
           LEETCODE_CSRF_TOKEN: ${{ secrets.LEETCODE_CSRF_TOKEN }}
+          SYNC_MODE: ${{ github.event.inputs.sync_mode }}
           PROBLEM_SLUG: ${{ github.event.inputs.problem_slug }}
+          START_DATE: ${{ github.event.inputs.start_date }}
+        run: python scripts/fetch_solution.py
+
+      - name: Commit and Push Changes
         run: |
-          echo "Starting Selective Sync for: $PROBLEM_SLUG"
-          python scripts/fetch_solution.py
-          
           git config --global user.name "GitHub Action Bot"
           git config --global user.email "action@github.com"
           git add .
-          git commit -m "Add solution for $PROBLEM_SLUG" || echo "No changes to commit"
+          # We use "|| exit 0" so the workflow doesn't fail if there's nothing new to commit
+          git commit -m "Automated Sync: ${{ github.event.inputs.problem_slug }}${{ github.event.inputs.sync_mode }}" || exit 0
           git push
-
-      # ==========================================
-      # ROUTE 2: THE BULK SYNC (Kept as Backup)
-      # ==========================================
-      - name: Run Full Bulk Sync
-        if: ${{ github.event.inputs.sync_mode == 'Bulk (All Accepted)' }}
-        uses: joshcai/leetcode-sync@v1.7
-        with:
-          github-token: ${{ github.token }}
-          leetcode-csrf-token: ${{ secrets.LEETCODE_CSRF_TOKEN }}
-          leetcode-session: ${{ secrets.LEETCODE_SESSION }}
-          destination-folder: my-code
-          verbose: true

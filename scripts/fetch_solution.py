@@ -28,18 +28,13 @@ def safe_request(query):
     return res.json()
 
 def get_problem_info(p_slug):
-    """Fetches category tags and the problem description."""
     query = {"query": "query q($s: String!) { question(titleSlug: $s) { topicTags { name } content } }", "variables": {"s": p_slug}}
     try:
         data = safe_request(query)
         q_data = data.get('data', {}).get('question', {})
-        
         tags = [t['name'] for t in q_data.get('topicTags', [])]
         raw_content = q_data.get('content', '')
-        
-        # Strip HTML tags and decode HTML entities to make it plain text
         clean_content = html.unescape(re.sub(r'<[^>]+>', '', raw_content)).strip()
-        
         return tags, clean_content
     except:
         return ["Uncategorized"], ""
@@ -58,7 +53,6 @@ def save_solution(p_slug, sub_id, lang):
         ext = { "python3": ".py", "python": ".py", "cpp": ".cpp", "java": ".java", "javascript": ".js" }.get(lang, ".txt")
         file_path = os.path.join(category, f"{p_slug}{ext}")
         
-        # 1. Format the multi-line comment based on the programming language
         comment_formats = {
             ".py": ('"""\n', '\n"""\n'),
             ".cpp": ('/*\n', '\n*/\n'),
@@ -68,7 +62,6 @@ def save_solution(p_slug, sub_id, lang):
         start_c, end_c = comment_formats.get(ext, ('', '\n'))
         problem_url = f"https://leetcode.com/problems/{p_slug}/"
         
-        # 2. Prepend the definition and URL to the code
         final_code = source_code
         if description:
             final_code = f"{start_c}Problem Link: {problem_url}\n\n{description}{end_c}\n{source_code}"
@@ -86,7 +79,6 @@ def save_solution(p_slug, sub_id, lang):
 try:
     if "selective" in sync_mode and slug:
         print(f"🔍 Selective Sync for: {slug}")
-        # FIXED: Strictly typed GraphQL query variables
         query = {
             "query": "query subList($offset: Int!, $limit: Int!, $questionSlug: String!) { submissionList(offset: $offset, limit: $limit, questionSlug: $questionSlug) { submissions { id, statusDisplay, lang } } }",
             "variables": {"offset": 0, "limit": 10, "questionSlug": slug}
@@ -102,7 +94,6 @@ try:
         start_ts = datetime.strptime(start_date_str, "%Y-%m-%d").timestamp()
         offset, has_more = 0, True
         while has_more:
-            # FIXED: Strictly typed GraphQL query variables for Timeline
             query = {
                 "query": "query subList($offset: Int!, $limit: Int!, $questionSlug: String!) { submissionList(offset: $offset, limit: $limit, questionSlug: $questionSlug) { submissions { id, timestamp, statusDisplay, lang, titleSlug } } }",
                 "variables": {"offset": offset, "limit": 20, "questionSlug": ""}
@@ -118,7 +109,7 @@ try:
                     save_solution(s.get('titleSlug'), s.get('id'), s.get('lang'))
             offset += 20
 
-    # --- 2. THE VISUAL TREE GENERATOR ---
+    # --- 2. THE DECLARATIVE README GENERATOR ---
     root_readme_path = "README.md"
     print("📝 Rebuilding Visual Tree Structure...")
     
@@ -143,34 +134,32 @@ try:
             tree_md += f"  * 📄 [{display_name}](./{cat}/{sol}) | [🔗 LeetCode]({leetcode_url})\n"
         tree_md += "\n"
 
-    start_marker = ""
-    end_marker = ""
+    # Hardcoded, indestructible template
+    HEADER = """# 🧑‍💻 LeetCode Problem Solving Portfolio
 
-    header_text = ""
-    footer_text = ""
-    
-    if os.path.exists(root_readme_path):
-        with open(root_readme_path, "r") as f:
-            full_content = f.read()
-            
-        start_pos = full_content.find(start_marker)
-        end_pos = full_content.find(end_marker)
-        
-        if start_pos != -1 and end_pos != -1:
-            header_text = full_content[:start_pos].strip()
-            footer_text = full_content[end_pos + len(end_marker):].strip()
+Welcome to my LeetCode algorithm portfolio! This repository serves as a centralized, continuous log of my problem-solving practice, data structure exploration, and technical interview preparation.
 
-    if not header_text:
-        header_text = """# 🧑‍💻 LeetCode Problem Solving Portfolio\n\nWelcome to my LeetCode algorithm portfolio! This repository serves as a centralized, continuous log of my problem-solving practice, data structure exploration, and technical interview preparation.\n\n## ⚙️ Repository Automation\nThis repository is automatically maintained via a custom **GitHub Actions CI/CD Pipeline**.\n\nWhenever I complete a problem, an on-demand workflow triggers a Python script that hits the LeetCode GraphQL API, fetches my accepted code, generates a minimalist problem reference, and pushes the commit directly to this repository.\n\n## 📂 Structure\nThe solutions are organized by **Category** (e.g., Array, Sliding Window, Dynamic Programming).\n* **Category Folders:** Grouping by computer science concepts.\n* **Solution Files:** Each file is named after the problem slug for quick reference.\n\n## 📝 Problems Solved"""
+## ⚙️ Repository Automation
+This repository is automatically maintained via a custom **GitHub Actions CI/CD Pipeline**.
 
-    if not footer_text:
-        footer_text = "---\n*Generated automatically to track algorithmic problem-solving progress.*"
+Whenever I complete a problem, an on-demand workflow triggers a Python script that hits the LeetCode GraphQL API, fetches my accepted code, generates a minimalist problem reference, and pushes the commit directly to this repository.
 
-    final_readme = f"{header_text}\n\n{start_marker}\n{tree_md}{end_marker}\n\n{footer_text}\n"
+## 📂 Structure
+The solutions are organized by **Category** (e.g., Array, Sliding Window, Dynamic Programming).
+* **Category Folders:** Grouping by computer science concepts.
+* **Solution Files:** Each file is named after the problem slug for quick reference.
+
+## 📝 Problems Solved"""
+
+    FOOTER = """---
+*Generated automatically to track algorithmic problem-solving progress.*"""
+
+    # Overwrite the entire file with the clean template and new tree
+    final_readme = f"{HEADER}\n{tree_md}\n{FOOTER}\n"
 
     with open(root_readme_path, "w") as f:
         f.write(final_readme)
-    print("🚀 README tree structure updated with external links!")
+    print("🚀 README rebuilt cleanly with zero duplication!")
 
 except Exception as e:
     print(f"\n🔥 FATAL SCRIPT CRASH: {e}")

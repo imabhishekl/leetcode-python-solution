@@ -1,122 +1,133 @@
 import os
 import requests
 import re
+from datetime import datetime
 
-# Load environment variables
+# --- CONFIGURATION & ENV LOAD ---
 session_cookie = os.environ.get("LEETCODE_SESSION")
 csrf_token = os.environ.get("LEETCODE_CSRF_TOKEN")
+sync_mode = os.environ.get("SYNC_MODE") 
 slug = os.environ.get("PROBLEM_SLUG")
+start_date_str = os.environ.get("START_DATE")
 
 url = "https://leetcode.com/graphql"
 headers = {
     "Content-Type": "application/json",
     "Cookie": f"LEETCODE_SESSION={session_cookie}; csrftoken={csrf_token}",
-    "x-csrftoken": csrf_token,
-    "Referer": f"https://leetcode.com/problems/{slug}/"
+    "x-csrftoken": csrf_token
 }
 
-# --- 1. GET THE SUBMISSION CODE ---
-submissions_query = {
-    "query": """
-    query submissionList($offset: Int!, $limit: Int!, $questionSlug: String!) {
-      submissionList(offset: $offset, limit: $limit, questionSlug: $questionSlug) {
-        submissions { id, statusDisplay, lang }
-      }
+def get_problem_info(p_slug):
+    """Fetches category tags for a specific problem."""
+    query = {
+        "query": "query q($s: String!) { question(titleSlug: $s) { topicTags { name } } }",
+        "variables": {"s": p_slug}
     }
-    """,
-    "variables": {"offset": 0, "limit": 10, "questionSlug": slug}
-}
+    try:
+        res = requests.post(url, json=query, headers=headers).json()
+        tags = [t['name'] for t in res['data']['question']['topicTags']]
+        return tags
+    except:
+        return ["Uncategorized"]
 
-data = requests.post(url, json=submissions_query, headers=headers).json()
-accepted_subs = [s for s in data['data']['submissionList']['submissions'] if s['statusDisplay'] == 'Accepted']
-
-if not accepted_subs:
-    print(f"No accepted submissions found for {slug}.")
-    exit(1)
-
-target_id = accepted_subs[0]['id']
-language = accepted_subs[0]['lang']
-
-code_query = {
-    "query": """
-    query submissionDetails($submissionId: Int!) {
-      submissionDetails(submissionId: $submissionId) { code }
+def save_solution(p_slug, sub_id, lang):
+    """Fetches code and saves it into Category/problem-slug.ext."""
+    # 1. Fetch the source code
+    query = {
+        "query": "query s($id: Int!) { submissionDetails(submissionId: $id) { code } }",
+        "variables": {"id": int(sub_id)}
     }
-    """,
-    "variables": {"submissionId": int(target_id)}
-}
-source_code = requests.post(url, json=code_query, headers=headers).json()['data']['submissionDetails']['code']
+    try:
+        code_res = requests.post(url, json=query, headers=headers).json()
+        source_code = code_res['data']['submissionDetails']['code']
+        
+        # 2. Identify Category
+        tags = get_problem_info(p_slug)
+        category = tags[0].replace(" ", "_") if tags else "Uncategorized"
+        
+        # 3. Create folder and save file
+        os.makedirs(category, exist_ok=True)
+        ext = { "python3": ".py", "python": ".py", "cpp": ".cpp", "java": ".java", "javascript": ".js" }.get(lang, ".txt")
+        
+        file_path = os.path.join(category, f"{p_slug}{ext}")
+        with open(file_path, "w") as f:
+            f.write(source_code)
+        print(f"✅ Successfully saved: {category}/{p_slug}{ext}")
+    except Exception as e:
+        print(f"❌ Error saving {p_slug}: {e}")
 
-# --- 2. GET TOPIC TAGS (CATEGORIES) ---
-tags_query = {
-    "query": """
-    query questionData($titleSlug: String!) {
-      question(titleSlug: $titleSlug) {
-        topicTags { name }
-      }
+# --- MAIN EXECUTION LOGIC ---
+if sync_mode == "Selective (Single Problem)":
+    print(f"Running Selective Sync for: {slug}")
+    query = {
+        "query": "query subList($s: String!) { submissionList(offset: 0, limit: 5, questionSlug: $s) { submissions { id, statusDisplay, lang } } }",
+        "variables": {"s": slug}
     }
-    """,
-    "variables": {"titleSlug": slug}
-}
-tags_data = requests.post(url, json=tags_query, headers=headers).json()
-tags_list = [t['name'] for t in tags_data['data']['question']['topicTags']]
+    data = requests.post(url, json=query, headers=headers).json()
+    subs = data['data']['submissionList']['submissions']
+    accepted = [s for s in subs if s['statusDisplay'] == 'Accepted']
+    if accepted:
+        save_solution(slug, accepted[0]['id'], accepted[0]['lang'])
+    else:
+        print(f"No accepted submissions found for {slug}.")
 
-# Use the first tag as the main folder category (e.g., "Sliding Window" -> "Sliding_Window")
-primary_category = tags_list[0].replace(" ", "_") if tags_list else "Uncategorized"
+elif sync_mode == "Timeline (All since specific date)":
+    print(f"Running Timeline Sync since: {start_date_str}")
+    start_ts = datetime.strptime(start_date_str, "%Y-%m-%d").timestamp()
+    offset, has_more = 0, True
+    
+    while has_more:
+        query = {
+            "query": "query subList($o: Int!, $l: Int!) { submissionList(offset: $o, limit: $l) { submissions { id, timestamp, statusDisplay, lang, titleSlug } } }",
+            "variables": {"o": offset, "l": 20}
+        }
+        res = requests.post(url, json=query, headers=headers).json()
+        subs = res['data']['submissionList']['submissions']
+        if not subs: break
+        
+        for s in subs:
+            if int(s['timestamp']) < start_ts:
+                has_more = False
+                break
+            if s['statusDisplay'] == 'Accepted':
+                save_solution(s['titleSlug'], s['id'], s['lang'])
+        offset += 20
 
-# --- 3. FORMAT README & SAVE FILES IN CATEGORY FOLDER ---
-# The folder path is now: Category_Name/problem-slug/
-folder_path = os.path.join(primary_category, slug)
-os.makedirs(folder_path, exist_ok=True)
-
-# Add all tags to the minimalist README
-readme_content = f"[{slug}](https://leetcode.com/problems/{slug}/)\n\n**Categories:** {', '.join(tags_list)}\n"
-
-ext_map = {"python3": ".py", "python": ".py", "cpp": ".cpp", "java": ".java", "javascript": ".js"}
-code_path = os.path.join(folder_path, f"solution{ext_map.get(language, '.txt')}")
-
-with open(code_path, "w") as f:
-    f.write(source_code)
-
-readme_path = os.path.join(folder_path, "README.md")
-with open(readme_path, "w") as f:
-    f.write(readme_content)
-
-print(f"Successfully saved {slug} under {primary_category}!")
-
-# --- 4. AUTO-UPDATE THE ROOT README BY CATEGORY ---
+# --- AUTO-UPDATE ROOT README INDEX ---
 root_readme_path = "README.md"
 excluded_dirs = {'.git', '.github', 'scripts'}
 index_markdown = "\n"
 
-# Find all category folders
-categories = [d for d in os.listdir('.') if os.path.isdir(d) and d not in excluded_dirs and not d.startswith('.')]
-categories.sort()
+# Scan for category folders
+categories = sorted([d for d in os.listdir('.') if os.path.isdir(d) and d not in excluded_dirs and not d.startswith('.')])
 
-# Build the Markdown index
-for category in categories:
-    index_markdown += f"### {category.replace('_', ' ')}\n"
-    
-    # Find all problems inside this category
-    problems = [p for p in os.listdir(category) if os.path.isdir(os.path.join(category, p))]
-    problems.sort()
-    
-    for prob in problems:
-        index_markdown += f"- [{prob}](./{category}/{prob})\n"
+for cat in categories:
+    index_markdown += f"### {cat.replace('_', ' ')}\n"
+    solutions = sorted([f for f in os.listdir(cat) if os.path.isfile(os.path.join(cat, f))])
+    for sol in solutions:
+        index_markdown += f"- [{sol}](./{cat}/{sol})\n"
     index_markdown += "\n"
 
-# Inject into the root README
+# Update README with Split Logic (prevents total file reset)
 try:
-    with open(root_readme_path, "r") as f:
-        root_content = f.read()
+    if os.path.exists(root_readme_path):
+        with open(root_readme_path, "r") as f:
+            content = f.read()
         
-    pattern = r"().*?()"
-    replacement = rf"\1{index_markdown}\2"
-    updated_readme = re.sub(pattern, replacement, root_content, flags=re.DOTALL)
-    
-    with open(root_readme_path, "w") as f:
-        f.write(updated_readme)
-        
-    print("Successfully updated root README.md index by category!")
-except FileNotFoundError:
-    print("Root README.md not found. Skipping index update.")
+        if "" in content and "" in content:
+            # Split the file around the markers
+            parts = re.split(r"(|)", content, flags=re.DOTALL)
+            # parts list: [0:before, 1:START, 2:middle, 3:END, 4:after]
+            if len(parts) >= 5:
+                new_content = parts[0] + parts[1] + index_markdown + parts[3] + parts[4]
+                with open(root_readme_path, "w") as f:
+                    f.write(new_content)
+                print("🚀 Root README index updated successfully!")
+            else:
+                print("⚠️ Unexpected README structure. Check markers.")
+        else:
+            print("❌ Markers / not found.")
+    else:
+        print("❌ README.md file does not exist.")
+except Exception as e:
+    print(f"Error updating README: {e}")

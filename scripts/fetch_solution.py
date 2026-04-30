@@ -1,15 +1,12 @@
 import os
 import requests
-import json
 
-# Load environment variables injected by GitHub Actions
+# Load environment variables
 session_cookie = os.environ.get("LEETCODE_SESSION")
 csrf_token = os.environ.get("LEETCODE_CSRF_TOKEN")
 slug = os.environ.get("PROBLEM_SLUG")
 
-# LeetCode GraphQL Endpoint
 url = "https://leetcode.com/graphql"
-
 headers = {
     "Content-Type": "application/json",
     "Cookie": f"LEETCODE_SESSION={session_cookie}; csrftoken={csrf_token}",
@@ -17,64 +14,55 @@ headers = {
     "Referer": f"https://leetcode.com/problems/{slug}/"
 }
 
-# 1. Query to find your recent accepted submissions for this specific problem
+# --- 1. GET THE SUBMISSION CODE ---
 submissions_query = {
     "query": """
     query submissionList($offset: Int!, $limit: Int!, $questionSlug: String!) {
       submissionList(offset: $offset, limit: $limit, questionSlug: $questionSlug) {
-        submissions {
-          id
-          statusDisplay
-          lang
-        }
+        submissions { id, statusDisplay, lang }
       }
     }
     """,
-    "variables": {
-        "offset": 0,
-        "limit": 10,
-        "questionSlug": slug
-    }
+    "variables": {"offset": 0, "limit": 10, "questionSlug": slug}
 }
 
-response = requests.post(url, json=submissions_query, headers=headers)
-data = response.json()
-
-# Filter for the most recent "Accepted" submission
+data = requests.post(url, json=submissions_query, headers=headers).json()
 accepted_subs = [s for s in data['data']['submissionList']['submissions'] if s['statusDisplay'] == 'Accepted']
 
 if not accepted_subs:
     print(f"No accepted submissions found for {slug}.")
     exit(1)
 
-target_submission_id = accepted_subs[0]['id']
+target_id = accepted_subs[0]['id']
 language = accepted_subs[0]['lang']
 
-# 2. Query to get the actual code for that submission ID
 code_query = {
     "query": """
     query submissionDetails($submissionId: Int!) {
-      submissionDetails(submissionId: $submissionId) {
-        code
-      }
+      submissionDetails(submissionId: $submissionId) { code }
     }
     """,
-    "variables": {
-        "submissionId": int(target_submission_id)
-    }
+    "variables": {"submissionId": int(target_id)}
 }
+source_code = requests.post(url, json=code_query, headers=headers).json()['data']['submissionDetails']['code']
 
-code_response = requests.post(url, json=code_query, headers=headers)
-code_data = code_response.json()
-source_code = code_data['data']['submissionDetails']['code']
+# --- 2. FORMAT THE MINIMAL README ---
+# Creates a simple markdown hyperlink using the slug
+readme_content = f"[{slug}](https://leetcode.com/problems/{slug}/)\n"
 
-# 3. Save the file locally (GitHub Action will commit this in the next step)
-# Map LeetCode language names to file extensions
+# --- 3. SAVE TO A FOLDER ---
+os.makedirs(slug, exist_ok=True)
+
+# Save the code file
 ext_map = {"python3": ".py", "python": ".py", "cpp": ".cpp", "java": ".java", "javascript": ".js"}
-file_ext = ext_map.get(language, ".txt")
-file_path = f"{slug}{file_ext}"
+code_path = os.path.join(slug, f"solution{ext_map.get(language, '.txt')}")
 
-with open(file_path, "w") as f:
+with open(code_path, "w") as f:
     f.write(source_code)
 
-print(f"Successfully fetched and saved {file_path}")
+# Save the README file
+readme_path = os.path.join(slug, "README.md")
+with open(readme_path, "w") as f:
+    f.write(readme_content)
+
+print(f"Successfully created folder '{slug}' with code and minimalist README!")

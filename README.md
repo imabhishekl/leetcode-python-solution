@@ -12,13 +12,6 @@ The solutions are neatly organized by their LeetCode problem slugs. Each folder 
 * `solution.py`: The accepted source code (optimized for time and space complexity).
 * `README.md`: A direct reference link back to the original problem statement.
 
-```text
-leetcode-solutions/
-├── scripts/               # CI/CD Python automation scripts
-├── two-sum/
-│   ├── README.md
-│   └── solution.py
-├── reverse-linked-list/
-│   ├── README.md
-│   └── solution.py
-└── ...
+## 📝 Problems Solved
+---
+*Generated automatically to track algorithmic problem-solving progress.*

@@ -20,7 +20,6 @@ headers = {
 }
 
 def safe_request(query):
-    """Safely handles network and auth errors."""
     res = requests.post(url, json=query, headers=headers)
     if res.status_code != 200:
         raise Exception(f"HTTP {res.status_code} Error. Check if your LeetCode Cookies are expired.")
@@ -84,51 +83,77 @@ try:
                     save_solution(s.get('titleSlug'), s.get('id'), s.get('lang'))
             offset += 20
 
-    # --- 2. THE SPLIT-FREE TREE GENERATOR ---
+    # --- 2. THE SELF-HEALING TREE GENERATOR ---
     root_readme_path = "README.md"
-    if os.path.exists(root_readme_path):
-        print("📝 Rebuilding Tree Structure...")
-        
-        allowed_exts = {'.py', '.cpp', '.java', '.js', '.txt'}
-        categories = []
-        for d in os.listdir('.'):
-            if os.path.isdir(d) and d not in {'.git', '.github', 'scripts'}:
-                if any(any(f.endswith(ext) for ext in allowed_exts) for f in os.listdir(d)):
-                    categories.append(d)
-        
-        categories.sort()
-        tree_md = "\n"
-        for cat in categories:
-            tree_md += f"### {cat.replace('_', ' ')}\n"
-            solutions = sorted([f for f in os.listdir(cat) if any(f.endswith(ext) for ext in allowed_exts)])
-            for sol in solutions:
-                tree_md += f"- [{sol}](./{cat}/{sol})\n"
-            tree_md += "\n"
+    print("📝 Rebuilding Tree Structure...")
+    
+    allowed_exts = {'.py', '.cpp', '.java', '.js', '.txt'}
+    categories = []
+    
+    # 1. Gather all actual categories and code files
+    for d in os.listdir('.'):
+        if os.path.isdir(d) and d not in {'.git', '.github', 'scripts'}:
+            if any(any(f.endswith(ext) for ext in allowed_exts) for f in os.listdir(d)):
+                categories.append(d)
+    
+    categories.sort()
+    tree_md = "\n"
+    for cat in categories:
+        tree_md += f"### {cat.replace('_', ' ')}\n"
+        solutions = sorted([f for f in os.listdir(cat) if any(f.endswith(ext) for ext in allowed_exts)])
+        for sol in solutions:
+            # Strip the file extension for a cleaner display name!
+            display_name = os.path.splitext(sol)[0]
+            tree_md += f"- [{display_name}](./{cat}/{sol})\n"
+        tree_md += "\n"
 
+    # 2. Setup safe markers
+    start_marker = ""
+    end_marker = ""
+
+    # 3. Read current file to see if we can save custom changes
+    header_text = ""
+    footer_text = ""
+    
+    if os.path.exists(root_readme_path):
         with open(root_readme_path, "r") as f:
             full_content = f.read()
-
-        # SAFE SLICING (No .split() used anywhere!)
-        marker = ""
-        marker_pos = full_content.find(marker)
+            
+        start_pos = full_content.find(start_marker)
+        end_pos = full_content.find(end_marker)
         
-        if marker_pos != -1:
-            # Slice everything from the beginning up to the marker
-            header_text = full_content[:marker_pos].strip()
-        else:
-            header_text = full_content.strip()
+        if start_pos != -1 and end_pos != -1:
+            # Markers exist! Keep the exact header and footer.
+            header_text = full_content[:start_pos].strip()
+            footer_text = full_content[end_pos + len(end_marker):].strip()
 
-        final_readme = (
-            header_text + "\n\n" +
-            "\n" +
-            tree_md +
-            "\n\n" +
-            "---\n*Generated automatically to track algorithmic problem-solving progress.*\n"
-        )
+    # 4. If markers are missing (like right now), inject the default master template!
+    if not header_text:
+        header_text = """# 🧑‍💻 LeetCode Problem Solving Portfolio
 
-        with open(root_readme_path, "w") as f:
-            f.write(final_readme)
-        print("🚀 README successfully protected and updated!")
+Welcome to my LeetCode algorithm portfolio! This repository serves as a centralized, continuous log of my problem-solving practice, data structure exploration, and technical interview preparation.
+
+## ⚙️ Repository Automation
+This repository is automatically maintained via a custom **GitHub Actions CI/CD Pipeline**. 
+
+Whenever I complete a problem, an on-demand workflow triggers a Python script that hits the LeetCode GraphQL API, fetches my accepted code, generates a minimalist problem reference, and pushes the commit directly to this repository.
+
+## 📂 Structure
+The solutions are organized by **Category** (e.g., Array, Sliding Window, Dynamic Programming).
+* **Category Folders:** Grouping by computer science concepts.
+* **Solution Files:** Each file is named after the problem slug for quick reference.
+
+## 📝 Problems Solved"""
+
+    if not footer_text:
+        footer_text = "---\n*Generated automatically to track algorithmic problem-solving progress.*"
+
+    # 5. Assemble and write the final indestructible README
+    final_readme = f"{header_text}\n\n{start_marker}\n{tree_md}{end_marker}\n\n{footer_text}\n"
+
+    with open(root_readme_path, "w") as f:
+        f.write(final_readme)
+    print("🚀 README successfully protected and updated!")
 
 except Exception as e:
     print(f"\n🔥 FATAL SCRIPT CRASH: {e}")

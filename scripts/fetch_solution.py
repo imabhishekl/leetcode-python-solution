@@ -47,53 +47,76 @@ code_query = {
 }
 source_code = requests.post(url, json=code_query, headers=headers).json()['data']['submissionDetails']['code']
 
-# --- 2. FORMAT THE MINIMAL README ---
-readme_content = f"[{slug}](https://leetcode.com/problems/{slug}/)\n"
+# --- 2. GET TOPIC TAGS (CATEGORIES) ---
+tags_query = {
+    "query": """
+    query questionData($titleSlug: String!) {
+      question(titleSlug: $titleSlug) {
+        topicTags { name }
+      }
+    }
+    """,
+    "variables": {"titleSlug": slug}
+}
+tags_data = requests.post(url, json=tags_query, headers=headers).json()
+tags_list = [t['name'] for t in tags_data['data']['question']['topicTags']]
 
-# --- 3. SAVE TO A FOLDER ---
-os.makedirs(slug, exist_ok=True)
+# Use the first tag as the main folder category (e.g., "Sliding Window" -> "Sliding_Window")
+primary_category = tags_list[0].replace(" ", "_") if tags_list else "Uncategorized"
+
+# --- 3. FORMAT README & SAVE FILES IN CATEGORY FOLDER ---
+# The folder path is now: Category_Name/problem-slug/
+folder_path = os.path.join(primary_category, slug)
+os.makedirs(folder_path, exist_ok=True)
+
+# Add all tags to the minimalist README
+readme_content = f"[{slug}](https://leetcode.com/problems/{slug}/)\n\n**Categories:** {', '.join(tags_list)}\n"
 
 ext_map = {"python3": ".py", "python": ".py", "cpp": ".cpp", "java": ".java", "javascript": ".js"}
-code_path = os.path.join(slug, f"solution{ext_map.get(language, '.txt')}")
+code_path = os.path.join(folder_path, f"solution{ext_map.get(language, '.txt')}")
 
 with open(code_path, "w") as f:
     f.write(source_code)
 
-readme_path = os.path.join(slug, "README.md")
+readme_path = os.path.join(folder_path, "README.md")
 with open(readme_path, "w") as f:
     f.write(readme_content)
 
-print(f"Successfully saved {slug}!")
+print(f"Successfully saved {slug} under {primary_category}!")
 
-# --- 4. AUTO-UPDATE THE ROOT README.MD INDEX ---
+# --- 4. AUTO-UPDATE THE ROOT README BY CATEGORY ---
 root_readme_path = "README.md"
 excluded_dirs = {'.git', '.github', 'scripts'}
-problem_folders = []
+index_markdown = "\n"
 
-# Scan the current directory for folders
-for item in os.listdir('.'):
-    if os.path.isdir(item) and item not in excluded_dirs and not item.startswith('.'):
-        problem_folders.append(item)
+# Find all category folders
+categories = [d for d in os.listdir('.') if os.path.isdir(d) and d not in excluded_dirs and not d.startswith('.')]
+categories.sort()
 
-# Alphabetize the list of problems
-problem_folders.sort()
+# Build the Markdown index
+for category in categories:
+    index_markdown += f"### {category.replace('_', ' ')}\n"
+    
+    # Find all problems inside this category
+    problems = [p for p in os.listdir(category) if os.path.isdir(os.path.join(category, p))]
+    problems.sort()
+    
+    for prob in problems:
+        index_markdown += f"- [{prob}](./{category}/{prob})\n"
+    index_markdown += "\n"
 
-# Create the Markdown list with clickable links
-index_list = "\n".join([f"- [{folder}](./{folder})" for folder in problem_folders])
-index_list = "\n" + index_list + "\n"
-
-# Read the root README, replace the text between the markers, and write it back
+# Inject into the root README
 try:
     with open(root_readme_path, "r") as f:
         root_content = f.read()
         
     pattern = r"().*?()"
-    replacement = rf"\1{index_list}\2"
+    replacement = rf"\1{index_markdown}\2"
     updated_readme = re.sub(pattern, replacement, root_content, flags=re.DOTALL)
     
     with open(root_readme_path, "w") as f:
         f.write(updated_readme)
         
-    print("Successfully updated root README.md index!")
+    print("Successfully updated root README.md index by category!")
 except FileNotFoundError:
     print("Root README.md not found. Skipping index update.")

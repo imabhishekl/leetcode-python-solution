@@ -1,5 +1,6 @@
 import os
 import requests
+import re
 
 # Load environment variables
 session_cookie = os.environ.get("LEETCODE_SESSION")
@@ -47,22 +48,52 @@ code_query = {
 source_code = requests.post(url, json=code_query, headers=headers).json()['data']['submissionDetails']['code']
 
 # --- 2. FORMAT THE MINIMAL README ---
-# Creates a simple markdown hyperlink using the slug
 readme_content = f"[{slug}](https://leetcode.com/problems/{slug}/)\n"
 
 # --- 3. SAVE TO A FOLDER ---
 os.makedirs(slug, exist_ok=True)
 
-# Save the code file
 ext_map = {"python3": ".py", "python": ".py", "cpp": ".cpp", "java": ".java", "javascript": ".js"}
 code_path = os.path.join(slug, f"solution{ext_map.get(language, '.txt')}")
 
 with open(code_path, "w") as f:
     f.write(source_code)
 
-# Save the README file
 readme_path = os.path.join(slug, "README.md")
 with open(readme_path, "w") as f:
     f.write(readme_content)
 
-print(f"Successfully created folder '{slug}' with code and minimalist README!")
+print(f"Successfully saved {slug}!")
+
+# --- 4. AUTO-UPDATE THE ROOT README.MD INDEX ---
+root_readme_path = "README.md"
+excluded_dirs = {'.git', '.github', 'scripts'}
+problem_folders = []
+
+# Scan the current directory for folders
+for item in os.listdir('.'):
+    if os.path.isdir(item) and item not in excluded_dirs and not item.startswith('.'):
+        problem_folders.append(item)
+
+# Alphabetize the list of problems
+problem_folders.sort()
+
+# Create the Markdown list with clickable links
+index_list = "\n".join([f"- [{folder}](./{folder})" for folder in problem_folders])
+index_list = "\n" + index_list + "\n"
+
+# Read the root README, replace the text between the markers, and write it back
+try:
+    with open(root_readme_path, "r") as f:
+        root_content = f.read()
+        
+    pattern = r"().*?()"
+    replacement = rf"\1{index_list}\2"
+    updated_readme = re.sub(pattern, replacement, root_content, flags=re.DOTALL)
+    
+    with open(root_readme_path, "w") as f:
+        f.write(updated_readme)
+        
+    print("Successfully updated root README.md index!")
+except FileNotFoundError:
+    print("Root README.md not found. Skipping index update.")

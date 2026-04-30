@@ -1,20 +1,65 @@
-name: LeetCode Sync
+name: LeetCode Smart Sync
 
 on:
+  # 1. We removed the "schedule" block to disable automatic bulk runs
+  # 2. We use workflow_dispatch to give you a UI menu
   workflow_dispatch:
-  schedule:
-    - cron: "0 8 * * 6" # Runs every Saturday at 08:00 UTC. You can change this.
+    inputs:
+      sync_mode:
+        description: 'Which sync would you like to run?'
+        required: true
+        type: choice
+        options:
+          - 'Selective (Single Problem)'
+          - 'Bulk (All Accepted)'
+      problem_slug:
+        description: 'Problem Slug (Only required if you chose Selective)'
+        required: false
+        type: string
 
 jobs:
-  build:
+  execute_sync:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Sync
-      uses: joshcai/leetcode-sync@v1.7
-      with:
-        github-token: ${{ github.token }}
-        leetcode-csrf-token: ${{ secrets.LEETCODE_CSRF_TOKEN }}
-        leetcode-session: ${{ secrets.LEETCODE_SESSION }}
-        destination-folder: my-code # The folder where code will be saved
-        verbose: true
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: pip install requests
+
+      # ==========================================
+      # ROUTE 1: THE SELECTIVE SYNC (Your Primary)
+      # ==========================================
+      - name: Fetch Specific Solution
+        if: ${{ github.event.inputs.sync_mode == 'Selective (Single Problem)' }}
+        env:
+          LEETCODE_SESSION: ${{ secrets.LEETCODE_SESSION }}
+          LEETCODE_CSRF_TOKEN: ${{ secrets.LEETCODE_CSRF_TOKEN }}
+          PROBLEM_SLUG: ${{ github.event.inputs.problem_slug }}
+        run: |
+          echo "Starting Selective Sync for: $PROBLEM_SLUG"
+          python scripts/fetch_solution.py
+          
+          git config --global user.name "GitHub Action Bot"
+          git config --global user.email "action@github.com"
+          git add .
+          git commit -m "Add solution for $PROBLEM_SLUG" || echo "No changes to commit"
+          git push
+
+      # ==========================================
+      # ROUTE 2: THE BULK SYNC (Kept as Backup)
+      # ==========================================
+      - name: Run Full Bulk Sync
+        if: ${{ github.event.inputs.sync_mode == 'Bulk (All Accepted)' }}
+        uses: joshcai/leetcode-sync@v1.7
+        with:
+          github-token: ${{ github.token }}
+          leetcode-csrf-token: ${{ secrets.LEETCODE_CSRF_TOKEN }}
+          leetcode-session: ${{ secrets.LEETCODE_SESSION }}
+          destination-folder: my-code
+          verbose: true

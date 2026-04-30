@@ -1,8 +1,6 @@
 name: LeetCode Smart Sync
 
 on:
-  # 1. We removed the "schedule" block to disable automatic bulk runs
-  # 2. We use workflow_dispatch to give you a UI menu
   workflow_dispatch:
     inputs:
       sync_mode:
@@ -21,11 +19,13 @@ jobs:
   execute_sync:
     runs-on: ubuntu-latest
     steps:
+      # --- UPDATED TO v4 HERE ---
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 
 
+      # --- UPDATED TO v5 HERE ---
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 
         with:
           python-version: '3.10'
 

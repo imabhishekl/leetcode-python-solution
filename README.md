@@ -36,6 +36,7 @@ The solutions are organized by **Category** (e.g., Array, Sliding Window, Dynami
   * 📄 [longest-consecutive-sequence](./Array/longest-consecutive-sequence.py) | [🔗 LeetCode](https://leetcode.com/problems/longest-consecutive-sequence/)
   * 📄 [maximum-product-subarray](./Array/maximum-product-subarray.py) | [🔗 LeetCode](https://leetcode.com/problems/maximum-product-subarray/)
   * 📄 [meeting-rooms-ii](./Array/meeting-rooms-ii.py) | [🔗 LeetCode](https://leetcode.com/problems/meeting-rooms-ii/)
+  * 📄 [merge-intervals](./Array/merge-intervals.py) | [🔗 LeetCode](https://leetcode.com/problems/merge-intervals/)
   * 📄 [merge-sorted-array](./Array/merge-sorted-array.py) | [🔗 LeetCode](https://leetcode.com/problems/merge-sorted-array/)
   * 📄 [min-cost-to-connect-all-points](./Array/min-cost-to-connect-all-points.py) | [🔗 LeetCode](https://leetcode.com/problems/min-cost-to-connect-all-points/)
   * 📄 [minimum-number-of-arrows-to-burst-balloons](./Array/minimum-number-of-arrows-to-burst-balloons.py) | [🔗 LeetCode](https://leetcode.com/problems/minimum-number-of-arrows-to-burst-balloons/)

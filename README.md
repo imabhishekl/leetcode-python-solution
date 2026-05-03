@@ -68,6 +68,7 @@ The solutions are organized by **Category** (e.g., Array, Sliding Window, Dynami
   * 📄 [design-a-leaderboard](./Hash_Table/design-a-leaderboard.cpp) | [🔗 LeetCode](https://leetcode.com/problems/design-a-leaderboard/)
   * 📄 [linked-list-cycle-ii](./Hash_Table/linked-list-cycle-ii.py) | [🔗 LeetCode](https://leetcode.com/problems/linked-list-cycle-ii/)
   * 📄 [linked-list-cycle](./Hash_Table/linked-list-cycle.py) | [🔗 LeetCode](https://leetcode.com/problems/linked-list-cycle/)
+  * 📄 [minimum-genetic-mutation](./Hash_Table/minimum-genetic-mutation.py) | [🔗 LeetCode](https://leetcode.com/problems/minimum-genetic-mutation/)
   * 📄 [partition-labels](./Hash_Table/partition-labels.py) | [🔗 LeetCode](https://leetcode.com/problems/partition-labels/)
   * 📄 [rearrange-string-k-distance-apart](./Hash_Table/rearrange-string-k-distance-apart.cpp) | [🔗 LeetCode](https://leetcode.com/problems/rearrange-string-k-distance-apart/)
 

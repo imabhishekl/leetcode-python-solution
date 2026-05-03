@@ -31,6 +31,7 @@ The solutions are organized by **Category** (e.g., Array, Sliding Window, Dynami
   * 📄 [group-anagrams](./Array/group-anagrams.py) | [🔗 LeetCode](https://leetcode.com/problems/group-anagrams/)
   * 📄 [h-index](./Array/h-index.py) | [🔗 LeetCode](https://leetcode.com/problems/h-index/)
   * 📄 [hand-of-straights](./Array/hand-of-straights.py) | [🔗 LeetCode](https://leetcode.com/problems/hand-of-straights/)
+  * 📄 [insert-interval](./Array/insert-interval.py) | [🔗 LeetCode](https://leetcode.com/problems/insert-interval/)
   * 📄 [intersection-of-two-arrays](./Array/intersection-of-two-arrays.py) | [🔗 LeetCode](https://leetcode.com/problems/intersection-of-two-arrays/)
   * 📄 [koko-eating-bananas](./Array/koko-eating-bananas.py) | [🔗 LeetCode](https://leetcode.com/problems/koko-eating-bananas/)
   * 📄 [longest-consecutive-sequence](./Array/longest-consecutive-sequence.py) | [🔗 LeetCode](https://leetcode.com/problems/longest-consecutive-sequence/)

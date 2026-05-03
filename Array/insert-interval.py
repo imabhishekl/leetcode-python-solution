@@ -39,6 +39,31 @@ Constraints:
 
 class Solution:
     def insert(self, intervals: List[List[int]], newInterval: List[int]) -> List[List[int]]:
+        temp = []
+        result = []
+        inserted = False
+        for s, e in intervals:
+            if newInterval[0] < s and not inserted:
+                temp.append(newInterval)
+                inserted = True
+            temp.append([s, e])
+
+        if not inserted:
+            temp.append(newInterval)
+
+        cs, ce = -1, -1
+        for s, e in temp:
+            if cs == -1:
+                cs, ce = s, e
+            elif s <= ce:
+                ce = max(ce, e)
+            else:
+                result.append([cs, ce])
+                cs, ce = s, e
+        result.append([cs, ce])
+        return result
+
+    def insertSort(self, intervals: List[List[int]], newInterval: List[int]) -> List[List[int]]:
         result = []
         intervals.append(newInterval)
         intervals.sort(key=lambda x: x[0])

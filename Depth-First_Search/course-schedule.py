@@ -41,23 +41,26 @@ Constraints:
 
 class Solution:
     def canFinish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:
-        graph = [[] for _ in range(numCourses)]
-        inDegree = [0] * numCourses
-        courseCompleted = 0
+        graph = defaultdict(list)
+        indegree = [0] * numCourses
+        coursesCompleted = 0
+
+        for course, pre in prerequisites:
+            graph[pre].append(course)
+            indegree[course] += 1
+
         q = deque()
-        for pre in prerequisites:
-            v, u = pre[0], pre[1]
-            graph[u].append(v)
-            inDegree[v] += 1
         for i in range(numCourses):
-            if inDegree[i] == 0:
+            if indegree[i] == 0:
                 q.append(i)
 
+        if not q:
+            return False
         while q:
-            n = q.popleft()
-            courseCompleted += 1
-            for i in graph[n]:
-                inDegree[i] -= 1
-                if inDegree[i] == 0:
-                    q.append(i)
-        return courseCompleted == numCourses
+            c = q.popleft()
+            coursesCompleted += 1
+            for dependent in graph[c]:
+                indegree[dependent] -= 1
+                if indegree[dependent] == 0:
+                    q.append(dependent)
+        return coursesCompleted == numCourses

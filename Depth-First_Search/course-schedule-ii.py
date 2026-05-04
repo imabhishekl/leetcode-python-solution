@@ -48,24 +48,24 @@ Constraints:
 
 class Solution:
     def findOrder(self, numCourses: int, prerequisites: List[List[int]]) -> List[int]:
-        result = []
+        graph = defaultdict(set)
+        indegree = [0] * numCourses
         q = deque()
-        graph = [[] for _ in range(numCourses)]
-        inDegree = [0] * numCourses
+        result = []
 
-        for v, u in prerequisites:
-            graph[u].append(v)
-            inDegree[v] += 1
+        for c, p in prerequisites:
+            graph[p].add(c)
+            indegree[c] += 1
 
         for i in range(numCourses):
-            if inDegree[i] == 0:
+            if indegree[i] == 0:
                 q.append(i)
-
+        
         while q:
-            course = q.popleft()
-            result.append(course)
-            for n in graph[course]:
-                inDegree[n] -= 1
-                if inDegree[n] == 0:
-                    q.append(n)
+            c = q.popleft()
+            result.append(c)
+            for nb in graph[c]:
+                indegree[nb] -= 1
+                if indegree[nb] == 0:
+                    q.append(nb)
         return result if len(result) == numCourses else []

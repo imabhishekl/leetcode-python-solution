@@ -27,6 +27,7 @@ The solutions are organized by **Category** (e.g., Array, Sliding Window, Dynami
   * 📄 [evaluate-reverse-polish-notation](./Array/evaluate-reverse-polish-notation.py) | [🔗 LeetCode](https://leetcode.com/problems/evaluate-reverse-polish-notation/)
   * 📄 [final-prices-with-a-special-discount-in-a-shop](./Array/final-prices-with-a-special-discount-in-a-shop.cpp) | [🔗 LeetCode](https://leetcode.com/problems/final-prices-with-a-special-discount-in-a-shop/)
   * 📄 [find-minimum-in-rotated-sorted-array](./Array/find-minimum-in-rotated-sorted-array.py) | [🔗 LeetCode](https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/)
+  * 📄 [find-peak-element](./Array/find-peak-element.py) | [🔗 LeetCode](https://leetcode.com/problems/find-peak-element/)
   * 📄 [find-the-duplicate-number](./Array/find-the-duplicate-number.py) | [🔗 LeetCode](https://leetcode.com/problems/find-the-duplicate-number/)
   * 📄 [game-of-life](./Array/game-of-life.py) | [🔗 LeetCode](https://leetcode.com/problems/game-of-life/)
   * 📄 [group-anagrams](./Array/group-anagrams.py) | [🔗 LeetCode](https://leetcode.com/problems/group-anagrams/)

@@ -37,6 +37,7 @@ The solutions are organized by **Category** (e.g., Array, Sliding Window, Dynami
   * 📄 [insert-interval](./Array/insert-interval.py) | [🔗 LeetCode](https://leetcode.com/problems/insert-interval/)
   * 📄 [intersection-of-two-arrays](./Array/intersection-of-two-arrays.py) | [🔗 LeetCode](https://leetcode.com/problems/intersection-of-two-arrays/)
   * 📄 [koko-eating-bananas](./Array/koko-eating-bananas.py) | [🔗 LeetCode](https://leetcode.com/problems/koko-eating-bananas/)
+  * 📄 [kth-largest-element-in-an-array](./Array/kth-largest-element-in-an-array.py) | [🔗 LeetCode](https://leetcode.com/problems/kth-largest-element-in-an-array/)
   * 📄 [longest-consecutive-sequence](./Array/longest-consecutive-sequence.py) | [🔗 LeetCode](https://leetcode.com/problems/longest-consecutive-sequence/)
   * 📄 [maximum-product-subarray](./Array/maximum-product-subarray.py) | [🔗 LeetCode](https://leetcode.com/problems/maximum-product-subarray/)
   * 📄 [meeting-rooms-ii](./Array/meeting-rooms-ii.py) | [🔗 LeetCode](https://leetcode.com/problems/meeting-rooms-ii/)

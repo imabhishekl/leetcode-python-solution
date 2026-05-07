@@ -51,6 +51,7 @@ The solutions are organized by **Category** (e.g., Array, Sliding Window, Dynami
   * 📄 [remove-duplicates-from-sorted-array-ii](./Array/remove-duplicates-from-sorted-array-ii.py) | [🔗 LeetCode](https://leetcode.com/problems/remove-duplicates-from-sorted-array-ii/)
   * 📄 [remove-duplicates-from-sorted-array](./Array/remove-duplicates-from-sorted-array.py) | [🔗 LeetCode](https://leetcode.com/problems/remove-duplicates-from-sorted-array/)
   * 📄 [rotate-array](./Array/rotate-array.py) | [🔗 LeetCode](https://leetcode.com/problems/rotate-array/)
+  * 📄 [search-a-2d-matrix](./Array/search-a-2d-matrix.py) | [🔗 LeetCode](https://leetcode.com/problems/search-a-2d-matrix/)
   * 📄 [snakes-and-ladders](./Array/snakes-and-ladders.py) | [🔗 LeetCode](https://leetcode.com/problems/snakes-and-ladders/)
   * 📄 [sort-integers-by-the-number-of-1-bits](./Array/sort-integers-by-the-number-of-1-bits.cpp) | [🔗 LeetCode](https://leetcode.com/problems/sort-integers-by-the-number-of-1-bits/)
   * 📄 [target-sum](./Array/target-sum.py) | [🔗 LeetCode](https://leetcode.com/problems/target-sum/)

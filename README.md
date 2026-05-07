@@ -70,6 +70,7 @@ The solutions are organized by **Category** (e.g., Array, Sliding Window, Dynami
   * 📄 [cheapest-flights-within-k-stops](./Dynamic_Programming/cheapest-flights-within-k-stops.py) | [🔗 LeetCode](https://leetcode.com/problems/cheapest-flights-within-k-stops/)
 
 ### 📂 Hash Table
+  * 📄 [clone-graph](./Hash_Table/clone-graph.py) | [🔗 LeetCode](https://leetcode.com/problems/clone-graph/)
   * 📄 [copy-list-with-random-pointer](./Hash_Table/copy-list-with-random-pointer.py) | [🔗 LeetCode](https://leetcode.com/problems/copy-list-with-random-pointer/)
   * 📄 [design-a-leaderboard](./Hash_Table/design-a-leaderboard.cpp) | [🔗 LeetCode](https://leetcode.com/problems/design-a-leaderboard/)
   * 📄 [linked-list-cycle-ii](./Hash_Table/linked-list-cycle-ii.py) | [🔗 LeetCode](https://leetcode.com/problems/linked-list-cycle-ii/)

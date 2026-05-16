@@ -20,6 +20,7 @@ The solutions are organized by **Category** (e.g., Array, Sliding Window, Dynami
   * 📄 [best-time-to-buy-and-sell-stock](./Array/best-time-to-buy-and-sell-stock.py) | [🔗 LeetCode](https://leetcode.com/problems/best-time-to-buy-and-sell-stock/)
   * 📄 [buildings-with-an-ocean-view](./Array/buildings-with-an-ocean-view.py) | [🔗 LeetCode](https://leetcode.com/problems/buildings-with-an-ocean-view/)
   * 📄 [car-fleet](./Array/car-fleet.py) | [🔗 LeetCode](https://leetcode.com/problems/car-fleet/)
+  * 📄 [coin-change](./Array/coin-change.py) | [🔗 LeetCode](https://leetcode.com/problems/coin-change/)
   * 📄 [container-with-most-water](./Array/container-with-most-water.cpp) | [🔗 LeetCode](https://leetcode.com/problems/container-with-most-water/)
   * 📄 [daily-temperatures](./Array/daily-temperatures.py) | [🔗 LeetCode](https://leetcode.com/problems/daily-temperatures/)
   * 📄 [evaluate-division](./Array/evaluate-division.py) | [🔗 LeetCode](https://leetcode.com/problems/evaluate-division/)

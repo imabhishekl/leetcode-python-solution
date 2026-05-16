@@ -84,6 +84,9 @@ The solutions are organized by **Category** (e.g., Array, Sliding Window, Dynami
 ### 📂 Linked List
   * 📄 [reorder-list](./Linked_List/reorder-list.py) | [🔗 LeetCode](https://leetcode.com/problems/reorder-list/)
 
+### 📂 Math
+  * 📄 [basic-calculator-iii](./Math/basic-calculator-iii.py) | [🔗 LeetCode](https://leetcode.com/problems/basic-calculator-iii/)
+
 ### 📂 String
   * 📄 [design-add-and-search-words-data-structure](./String/design-add-and-search-words-data-structure.py) | [🔗 LeetCode](https://leetcode.com/problems/design-add-and-search-words-data-structure/)
   * 📄 [partitioning-into-minimum-number-of-deci-binary-numbers](./String/partitioning-into-minimum-number-of-deci-binary-numbers.cpp) | [🔗 LeetCode](https://leetcode.com/problems/partitioning-into-minimum-number-of-deci-binary-numbers/)

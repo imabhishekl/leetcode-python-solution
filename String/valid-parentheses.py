@@ -62,15 +62,15 @@ Constraints:
 
 class Solution:
     def isValid(self, s: str) -> bool:
-        stack = []
-        match = {')':'(','}':'{',']':'['}
+        stk = []
 
-        for c in s:
-            if c in match:
-                if not stack or stack[-1] != match[c]:
-                    return False
-                stack.pop()
+        for token in s:
+            if token in "([{":
+                stk.append(token)
+            elif not stk:
+                return False
             else:
-                stack.append(c)
-        
-        return len(stack) == 0
+                last = stk.pop()
+                if (last == "{" and token != "}") or (last == "[" and token != "]" )or (last == "(" and token != ")"):
+                    return False
+        return True if not stk else False

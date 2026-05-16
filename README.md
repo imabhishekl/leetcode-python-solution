@@ -31,6 +31,7 @@ The solutions are organized by **Category** (e.g., Array, Sliding Window, Dynami
   * 📄 [find-minimum-in-rotated-sorted-array](./Array/find-minimum-in-rotated-sorted-array.py) | [🔗 LeetCode](https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/)
   * 📄 [find-peak-element](./Array/find-peak-element.py) | [🔗 LeetCode](https://leetcode.com/problems/find-peak-element/)
   * 📄 [find-the-duplicate-number](./Array/find-the-duplicate-number.py) | [🔗 LeetCode](https://leetcode.com/problems/find-the-duplicate-number/)
+  * 📄 [find-the-safest-path-in-a-grid](./Array/find-the-safest-path-in-a-grid.py) | [🔗 LeetCode](https://leetcode.com/problems/find-the-safest-path-in-a-grid/)
   * 📄 [game-of-life](./Array/game-of-life.py) | [🔗 LeetCode](https://leetcode.com/problems/game-of-life/)
   * 📄 [group-anagrams](./Array/group-anagrams.py) | [🔗 LeetCode](https://leetcode.com/problems/group-anagrams/)
   * 📄 [h-index](./Array/h-index.py) | [🔗 LeetCode](https://leetcode.com/problems/h-index/)

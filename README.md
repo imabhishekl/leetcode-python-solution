@@ -71,6 +71,7 @@ The solutions are organized by **Category** (e.g., Array, Sliding Window, Dynami
 
 ### 📂 Dynamic Programming
   * 📄 [cheapest-flights-within-k-stops](./Dynamic_Programming/cheapest-flights-within-k-stops.py) | [🔗 LeetCode](https://leetcode.com/problems/cheapest-flights-within-k-stops/)
+  * 📄 [number-of-ways-to-paint-n-3-grid](./Dynamic_Programming/number-of-ways-to-paint-n-3-grid.py) | [🔗 LeetCode](https://leetcode.com/problems/number-of-ways-to-paint-n-3-grid/)
 
 ### 📂 Hash Table
   * 📄 [clone-graph](./Hash_Table/clone-graph.py) | [🔗 LeetCode](https://leetcode.com/problems/clone-graph/)
